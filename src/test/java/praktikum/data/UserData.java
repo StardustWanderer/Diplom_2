@@ -11,10 +11,7 @@ public class UserData {
     public static UserRegistrationModel getRandomUser() {
         Faker faker = new Faker(Locale.ENGLISH);
 
-        // Генерируем уникальный email.
         String email = generateUniqueEmail(faker);
-
-        // Генерируем пароль и имя.
         String password = faker.internet().password(8, 16);
         String name = faker.name().firstName();
 
@@ -24,6 +21,7 @@ public class UserData {
     // Генерирует случайный email без создания объекта User.
     public static String getRandomEmail() {
         Faker faker = new Faker(Locale.ENGLISH);
+
         return generateUniqueEmail(faker);
     }
 
@@ -31,6 +29,7 @@ public class UserData {
     private static String generateUniqueEmail(Faker faker) {
         String email = faker.internet().emailAddress();
         String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+
         return email.replace("@", "-" + uniqueSuffix + "@");
     }
 }

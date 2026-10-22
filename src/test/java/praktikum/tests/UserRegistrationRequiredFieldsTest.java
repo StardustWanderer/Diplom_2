@@ -9,14 +9,12 @@ import org.junit.runners.Parameterized;
 import praktikum.data.UserData;
 import praktikum.models.UserRegistrationModel;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.hamcrest.Matchers.equalTo;
 
 @RunWith(Parameterized.class)
 @Feature("Регистрация без обязательных полей")
-public class UserRegistrationRequiredFieldsTest extends BaseTest{
+public class UserRegistrationRequiredFieldsTest extends BaseTest {
 
     private final String missingField;
 
@@ -24,7 +22,9 @@ public class UserRegistrationRequiredFieldsTest extends BaseTest{
         this.missingField = missingField;
     }
 
-    @Parameterized.Parameters(name = "Отсутствует обязательное поле: {0}")
+    @Parameterized.Parameters(
+            name = "Отсутствует обязательное поле: {0}"
+    )
     public static Object[][] testData() {
         return new Object[][]{
                 {"email"},
@@ -36,26 +36,41 @@ public class UserRegistrationRequiredFieldsTest extends BaseTest{
     @Test
     @Description("Регистрация без одного из обязательных полей")
     public void shouldNotRegisterUserWithoutRequiredField() {
-        UserRegistrationModel userRegistrationModel = UserData.getRandomUser();
+        UserRegistrationModel user = UserData.getRandomUser();
 
-        // Формируем тело запроса из всех обязательных полей.
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("email", userRegistrationModel.getEmail());
-        requestBody.put("password", userRegistrationModel.getPassword());
-        requestBody.put("name", userRegistrationModel.getName());
+        // Устанавливаем в null именно то поле,
+        // которое должно отсутствовать в JSON.
+        switch (missingField) {
+            case "email":
+                user.setEmail(null);
+                break;
+            case "password":
+                user.setPassword(null);
+                break;
+            case "name":
+                user.setName(null);
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Неизвестное обязательное поле: " + missingField
+                );
+        }
 
-        // Убираем одно поле в зависимости от параметра теста.
-        requestBody.remove(missingField);
+        Response response = userSteps.registerUser(user);
 
-        Response response = userSteps.registerUser(requestBody);
-
-        // Если сервер неожиданно вернул токен,
-        // сохраним его до проверок, которые могут упасть.
-        accessToken = response.jsonPath().getString("accessToken");
+        // Если токен неожиданно вернулся, сохраняем его
+        // для возможной очистки в @After.
+        accessToken = response.jsonPath()
+                .getString("accessToken");
 
         response.then()
-                .statusCode(403)
+                .statusCode(SC_FORBIDDEN)
                 .body("success", equalTo(false))
-                .body("message", equalTo("Email, password and name are required fields"));
+                .body(
+                        "message",
+                        equalTo(
+                                "Email, password and name are required fields"
+                        )
+                );
     }
 }

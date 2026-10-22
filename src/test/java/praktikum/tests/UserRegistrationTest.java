@@ -9,6 +9,8 @@ import praktikum.models.UserRegistrationModel;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
+import static org.apache.http.HttpStatus.SC_FORBIDDEN;
+import static org.apache.http.HttpStatus.SC_OK;
 
 @Feature("Регистрация пользователя")
 public class UserRegistrationTest extends BaseTest {
@@ -24,7 +26,7 @@ public class UserRegistrationTest extends BaseTest {
         accessToken = response.jsonPath().getString("accessToken");
 
         response.then()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true))
                 .body("user.email", equalTo(userRegistrationModel.getEmail()))
                 .body("user.name", equalTo(userRegistrationModel.getName()));
@@ -43,14 +45,14 @@ public class UserRegistrationTest extends BaseTest {
         accessToken = registrationResponse.jsonPath().getString("accessToken");
 
         registrationResponse.then()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true));
 
         // Повторно отправляем тот же набор данных.
         Response duplicateResponse = userSteps.registerUser(userRegistrationModel);
 
         duplicateResponse.then()
-                .statusCode(403)
+                .statusCode(SC_FORBIDDEN)
                 .body("success", equalTo(false))
                 .body("message", equalTo("User already exists"));
     }
