@@ -4,32 +4,38 @@ import com.github.javafaker.Faker;
 import praktikum.models.UserRegistrationModel;
 
 import java.util.Locale;
-import java.util.UUID;
 
 public class UserData {
+    private static final Faker userRus = new Faker(new Locale("ru"));
+    private static final Faker userEng = new Faker(Locale.ENGLISH);
+
 
     public static UserRegistrationModel getRandomUser() {
-        Faker faker = new Faker(Locale.ENGLISH);
 
-        String email = generateUniqueEmail(faker);
-        String password = faker.internet().password(8, 16);
-        String name = faker.name().firstName();
+        String email = generateUniqueEmail();
+        String password = generateUniquePassword();
+        String name = generateFirstName();
 
         return new UserRegistrationModel(email, password, name);
     }
 
     // Генерирует случайный email без создания объекта User.
     public static String getRandomEmail() {
-        Faker faker = new Faker(Locale.ENGLISH);
-
-        return generateUniqueEmail(faker);
+        return generateUniqueEmail();
     }
 
-    // Общая логика генерации уникального email.
-    private static String generateUniqueEmail(Faker faker) {
-        String email = faker.internet().emailAddress();
-        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+    private static String generateUniqueEmail() {
+        String email = userEng.internet().emailAddress();
+        String uniqueSuffix = userEng.regexify("[0-9]{6}");
 
         return email.replace("@", "-" + uniqueSuffix + "@");
+    }
+
+    private static String generateUniquePassword() {
+        return userEng.internet().password(8, 16);
+    }
+
+    private static String generateFirstName() {
+        return userRus.name().firstName();
     }
 }
